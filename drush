@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+
+GITTOP="$(git rev-parse --show-toplevel 2>/dev/null)"
+VENDOR_DRUSH="$GITTOP/vendor/bin/drush"
+LANDO_YML="$GITTOP/.lando.yml"
+
+# has lando yml?  assume inside lando container, exec lando drush
+[ -r "$LANDO_YML" ] && cd "$GITTOP" && exec time lando drush "$@"
+
+[ -z "$PHP_ID" ] && PHP_ID=php7_4
+PHP_PATH_ENDING="_x64/bin/php"
+
+export PATH="/Applications/AcquiaDevDesktop/mysql/bin:$PATH"
+export DRUSH_PHP="/Applications/AcquiaDevDesktop/$PHP_ID$PHP_PATH_ENDING"
+export DEVDESKTOP_DRUPAL_SETTINGS_DIR="$HOME/.acquia/DevDesktop/DrupalSettings"
+
+# local vendor drush?  use that instead.
+[ -r "$VENDOR_DRUSH" ] && exec "$VENDOR_DRUSH" "$@"
+
+#"/Applications/AcquiaDevDesktop/drush/drush.1" "$@"
+#"/Applications/AcquiaDevDesktop/drush_9/vendor/drush/drush/drush" "$@"
+"/Applications/AcquiaDevDesktop/drush_10/vendor/drush/drush/drush" "$@"
