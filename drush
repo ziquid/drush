@@ -4,6 +4,10 @@ GITTOP="$(git rev-parse --show-toplevel 2>/dev/null)"
 VENDOR_DRUSH="$GITTOP/vendor/bin/drush"
 LANDO_YML="$GITTOP/.lando.yml"
 
+# has fin (docksal) running?  exec fin drush
+FIN_STATUS=$(fin status | grep -q -s running; echo $?)
+[ "$FIN_STATUS" -eq "0" ] && echo fin drush "$@" && exec time fin drush "$@"
+
 # has lando yml?  assume inside lando container, exec lando drush
 [ -r "$LANDO_YML" ] && cd "$GITTOP" && exec time lando drush "$@"
 
