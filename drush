@@ -1,26 +1,33 @@
-#!/usr/bin/env sh
+#!/bin/bash
+
+# called from itself?  die with ignominy.
+[ "$DRUSH_WRAPPER" == 1 ] && say -v Daniel I\'m sorry $(whoami), I can\'t do that now. && exit 1
 
 GITTOP="$(git rev-parse --show-toplevel 2>/dev/null)"
+GITSRC="$GITTOP/src"
 VENDOR_DRUSH="$GITTOP/vendor/bin/drush"
+COMPOSER_GLOBAL_DRUSH="$HOME/.composer/vendor/bin/drush"
 LANDO_YML="$GITTOP/.lando.yml"
+SRC_LANDO_YML="$GITSRC/.lando.yml"
 
 # has fin (docksal) running?  exec fin drush
-FIN_STATUS=$(fin status | grep -q -s running; echo $?)
+FIN_STATUS=$(fin status 2>/dev/null | grep -q -s running; echo $?)
 [ "$FIN_STATUS" -eq "0" ] && echo fin drush "$@" && exec time fin drush "$@"
+
+# has lando.yml here?  exec lando drush here
+[ -r .lando.yml ] && exec time lando drush "$@"
 
 # has lando yml?  assume inside lando container, exec lando drush
 [ -r "$LANDO_YML" ] && cd "$GITTOP" && exec time lando drush "$@"
 
-[ -z "$PHP_ID" ] && PHP_ID=php7_4
-PHP_PATH_ENDING="_x64/bin/php"
-
-export PATH="/Applications/AcquiaDevDesktop/mysql/bin:$PATH"
-export DRUSH_PHP="/Applications/AcquiaDevDesktop/$PHP_ID$PHP_PATH_ENDING"
-export DEVDESKTOP_DRUPAL_SETTINGS_DIR="$HOME/.acquia/DevDesktop/DrupalSettings"
+# also check for lando inside src dir.
+[ -r "$SRC_LANDO_YML" ] && cd "$GITSRC" && exec time lando drush "$@"
 
 # local vendor drush?  use that instead.
 [ -r "$VENDOR_DRUSH" ] && exec "$VENDOR_DRUSH" "$@"
 
-#"/Applications/AcquiaDevDesktop/drush/drush.1" "$@"
-#"/Applications/AcquiaDevDesktop/drush_9/vendor/drush/drush/drush" "$@"
-"/Applications/AcquiaDevDesktop/drush_10/vendor/drush/drush/drush" "$@"
+# global vendor drush?  use that instead.
+[ -r "$COMPOSER_GLOBAL_DRUSH" ] && exec "$COMPOSER_GLOBAL_DRUSH" "$@"
+
+# can't find another drush, so ask shell to find it.
+DRUSH_WRAPPER=1 drush "$@"
