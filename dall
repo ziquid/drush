@@ -1,0 +1,14 @@
+#!/bin/bash
+# front end to scripts/dall.sh
+
+GITTOP="$(git rev-parse --show-toplevel 2>/dev/null)"
+DALL="$GITTOP/scripts/dall.sh"
+
+# check canonical place
+[ -x "$DALL" ] && exec "$DALL" "$@"
+
+# see if which can find it
+which -s dall.sh && exec dall.sh "$@"
+
+# die sadly
+say -v Daniel I\'m sorry $(whoami), I can\'t find that now. && exit 1
