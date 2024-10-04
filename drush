@@ -5,10 +5,12 @@
 
 GITTOP="$(git rev-parse --show-toplevel 2>/dev/null)"
 GITSRC="$GITTOP/src"
+GITDRUPAL="$GITTOP/drupal"
 VENDOR_DRUSH="$GITTOP/vendor/bin/drush"
 COMPOSER_GLOBAL_DRUSH="$HOME/.composer/vendor/bin/drush"
 LANDO_YML="$GITTOP/.lando.yml"
 SRC_LANDO_YML="$GITSRC/.lando.yml"
+DRUPAL_LANDO_YML="$GITDRUPAL/.lando.yml"
 
 # has fin (docksal) running?  exec fin drush
 FIN_STATUS=$(fin status 2>/dev/null | grep -q -s running; echo $?)
@@ -22,6 +24,9 @@ FIN_STATUS=$(fin status 2>/dev/null | grep -q -s running; echo $?)
 
 # also check for lando inside src dir.
 [ -r "$SRC_LANDO_YML" ] && cd "$GITSRC" && exec time lando drush "$@"
+
+# also check for lando inside drupal dir.
+[ -r "$DRUPAL_LANDO_YML" ] && cd "$GITDRUPAL" && exec time lando drush "$@"
 
 # local vendor drush?  use that instead.
 [ -r "$VENDOR_DRUSH" ] && exec "$VENDOR_DRUSH" "$@"
