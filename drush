@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # called from itself?  die with ignominy.
-[ "$DRUSH_WRAPPER" == 1 ] && say -v Daniel I\'m sorry $(whoami), I can\'t do that now. && exit 1
+[ "$DRUSH_WRAPPER" == 1 ] && echo I\'m sorry $(whoami), I can\'t do that now. 2>&1 && say -v Daniel I\'m sorry $(whoami), I can\'t do that now. && exit 1
 
 GITTOP="$(git rev-parse --show-toplevel 2>/dev/null)"
 GITSRC="$GITTOP/src"
@@ -9,13 +9,17 @@ VENDOR_DRUSH="$GITTOP/vendor/bin/drush"
 COMPOSER_GLOBAL_DRUSH="$HOME/.composer/vendor/bin/drush"
 LANDO_YML="$GITTOP/.lando.yml"
 SRC_LANDO_YML="$GITSRC/.lando.yml"
+MZKEFILE="$GITTOP/Mzkefile"
+
+# has Mzkefile?  exec mzke drush
+[ -r "$MZKEFILE" ] && cd "$GITTOP" && echo mzke drush "$@" && exec time mzke drush "$@"
 
 # has fin (docksal) running?  exec fin drush
 FIN_STATUS=$(fin status 2>/dev/null | grep -q -s running; echo $?)
 [ "$FIN_STATUS" -eq "0" ] && echo fin drush "$@" && exec time fin drush "$@"
 
 # has lando.yml here?  exec lando drush here
-[ -r .lando.yml ] && exec time lando drush "$@"
+[ -r .lando.yml ] && echo lando drush "$@" && exec time lando drush "$@"
 
 # has lando yml?  assume inside lando container, exec lando drush
 [ -r "$LANDO_YML" ] && cd "$GITTOP" && exec time lando drush "$@"
